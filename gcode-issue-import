@@ -148,8 +148,10 @@ sub import_issue
 	my ($github, $issue) = @_;
 
 	my $desc_with_user =
-		"Originally filed by " . $issue->reporter . " on " . $issue->reported
+		"Originally filed by **" . $issue->reporter . "** on " . $issue->reported
 		. "\n\n"
+		. "Google Code issue: http://code.google.com/p/" . $gc_proj . "/issues/detail?id=" . $issue->id
+		. "\n\n" 
 		. $issue->description();
 
 	my $gh_issue = Private::Net::GitHub::Issue->new({
@@ -181,7 +183,7 @@ sub import_issue
 			# Can't handle change in ownership via Net::GitHub
 			if (exists $comment->updates->{owner} ) {
 				my $o = delete $comment->updates->{owner};
-				push(@update_info, "Original ticket set owner to $o");
+				push(@update_info, "*Original ticket set owner to $o*");
 			}
 
 			if (exists $comment->updates->{labels} ) {
@@ -189,10 +191,10 @@ sub import_issue
 				foreach ( @{ $l } ) {
 					if( s/^-// ) {
 						$gh_issue->remove_label( $_ );
-						push(@update_info, "Removed label $_");
+						push(@update_info, "*Removed label $_*");
 					} else {
 						$gh_issue->add_label( $_ );
-						push(@update_info, "Added label $_");
+						push(@update_info, "*Added label $_*");
 					}
 				}
 			}
@@ -200,14 +202,14 @@ sub import_issue
 			if( exists $comment->updates->{status} ) {
 				my $s = delete $comment->updates->{status};
 				$gh_issue->set_status( $s );
-				push(@update_info, "Original ticket set status to $s (we converted to $gh_issue->{state})");
+				push(@update_info, "*Original ticket set status to $s (we converted to $gh_issue->{state})*");
 			}
 
 			if( exists $comment->updates->{summary} ) {
 				my $s = delete $comment->updates->{summary};
 				my $old_title = $gh_issue->{title};
 				$gh_issue->edit( $s );
-				push(@update_info, "Title changed from '$old_title' to '$s'");
+				push(@update_info, "*Title changed from '$old_title' to '$s'*");
 			}
 
 			# Warn of missed updates
@@ -219,9 +221,9 @@ sub import_issue
 		next unless ($comment->content || scalar @update_info);
 
 		my $comment_with_user =
-			"Updated by "
+			"Updated by **"
 			. $comment->author
-			. " on "
+			. "** on "
 			. $comment->date;
 
 		if( $comment->content ) {
@@ -240,7 +242,7 @@ sub import_issue
 	$gh_issue->set_status( $issue->status );
 	if( $old_state ne $gh_issue->{state} ) {
 		my $s = $issue->status;
-		$gh_issue->comment("Original ticket set status to $s (we converted to $gh_issue->{state})");
+		$gh_issue->comment("*Original ticket set status to $s (we converted to $gh_issue->{state})*");
 	}
 
 	# TODO attachments?
@@ -297,7 +299,7 @@ sub remove_label
 {
 	my ($self, $label) = @_;
 	_throttle_request_rate();
-	_die_if_error( $self->{_gi}->remove_label($self->{number}, uri_escape($label, "^A-Za-z0-9\-_~" ) ) );
+#	_die_if_error( $self->{_gi}->remove_label($self->{number}, uri_escape($label, "^A-Za-z0-9\-_~" ) ) );
 }
 
 sub edit
